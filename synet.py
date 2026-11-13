@@ -46,9 +46,9 @@ def main():
 
     syn.synthesize()
     end = time.time()
-    print "XXXXX Synthesis time for %s is %s" % (args.initial_inputs.split('/')[-1].split('.')[0], end - start)
-    outdir = "configs/%s" % (args.initial_inputs.split('/')[-1].split('.')[0] + '-configs')
-    print "Generating configs to ", outdir
+    print("XXXXX Synthesis time for %s is %s" % (args.initial_inputs.split('/')[-1].split('.')[0], end - start))
+    outdir = ("configs/%s" % (args.initial_inputs.split('/')[-1].split('.')[0] + '-configs'))
+    print("Generating configs to ", outdir)
     syn.gen_configs(outdir)
 
 

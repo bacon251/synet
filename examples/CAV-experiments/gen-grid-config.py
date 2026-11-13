@@ -10,7 +10,7 @@ mode=sys.argv[2]
 inputs_file = open('grid{}-{}.logic'.format(n, mode), 'w')
 req_file = open('grid{}-{}-req.logic'.format(n, mode), 'w')
 
-print 'Genearing config for grid of size', n, 'in mode', mode
+print('Genearing config for grid of size', n, 'in mode', mode)
 
 for x in range(1, n+1):
 	for y in range(1, n+1):
@@ -59,13 +59,13 @@ for y in range(1, n+1):
 if mode == 'bgp':
 	for x in range(1, n+1):
 		for y in range(1, n+1):
-			print x, y
+			print(x, y)
 			if y < n:
 				req_file.write('+Fwd("N{}1_BGP", "R{}{}", "R{}{}", "{}").\n'.format(n, y, x, y+1, x, 'static' if mode == 'static' else 'ospf'))
-				print '+Fwd("N{}1_BGP", "R{}{}", "R{}{}", "{}").\n'.format(n, y, x, y+1, x, 'static' if mode == 'static' else 'ospf')
+				print('+Fwd("N{}1_BGP", "R{}{}", "R{}{}", "{}").\n'.format(n, y, x, y+1, x, 'static' if mode == 'static' else 'ospf'))
 			elif x > 1:
 				req_file.write('+Fwd("N{}1_BGP", "R{}{}", "R{}{}", "{}").\n'.format(n, y, x, y, x-1, 'static' if mode == 'static' else 'ospf'))
-				print '+Fwd("N{}1_BGP", "R{}{}", "R{}{}", "{}").\n'.format(n, y, x, y, x-1, 'static' if mode == 'static' else 'ospf')
+				print('+Fwd("N{}1_BGP", "R{}{}", "R{}{}", "{}").\n'.format(n, y, x, y, x-1, 'static' if mode == 'static' else 'ospf'))
 
 if mode == 'bgp':
 	for x in range(2, n+1):

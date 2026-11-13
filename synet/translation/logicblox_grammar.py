@@ -8,14 +8,14 @@ from pyparsing import alphanums
 from pyparsing import Literal
 from pyparsing import Regex
 
-from atom import parse_atom
-from literal import parse_literal
-from rule import parse_rule
-from arithmetic_expression import parse_arithmetic_expr
-from comparison_expression import parse_comp_expr
-from variable import parse_variable
-from constant import parse_constant
-from program import Program
+from .atom import parse_atom
+from .literal import parse_literal
+from .rule import parse_rule
+from .arithmetic_expression import parse_arithmetic_expr
+from .comparison_expression import parse_comp_expr
+from .variable import parse_variable
+from .constant import parse_constant
+from .program import Program
 
 predicate_name = Regex(r'[a-zA-Z][a-zA-Z0-9_]*')
 variable_name = Regex(r'[a-zA-Z_][a-zA-Z0-9_]*').setParseAction(parse_variable)

@@ -11,9 +11,9 @@ for result_file in glob.glob(os.path.join(LOGS, '*.txt')):
 	topology = basename.split('-')[0]
 	mode = basename.split('-')[1]
 	run_id = basename.split('-')[2]
-	if topology not in data.keys():
+	if topology not in list(data.keys()):
 		data[topology] = {}
-	if mode not in data[topology].keys():
+	if mode not in list(data[topology].keys()):
 		data[topology][mode] = []
 	last_line = open(result_file, 'r').readlines()[-1].strip()
 	if not last_line.startswith('Synthesis time:'):
@@ -21,9 +21,9 @@ for result_file in glob.glob(os.path.join(LOGS, '*.txt')):
 	synthesis_time = float(last_line.split(': ')[1])
 	data[topology][mode].append(synthesis_time)
 
-for topo in data.keys():
-	for mode in data[topo].keys():
+for topo in list(data.keys()):
+	for mode in list(data[topo].keys()):
 		times = data[topo][mode]
 		if len(times) == 0:
 			continue
-		print topo, mode, numpy.average(times), numpy.std(times)
+		print(topo, mode, numpy.average(times), numpy.std(times))

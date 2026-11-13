@@ -1,4 +1,3 @@
-enum34
-networkx==1.11
-ipaddress
+networkx==2.8.8
 pyparsing
+z3-solver==4.8.17.0

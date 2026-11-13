@@ -4,22 +4,22 @@ import shutil
 import os
 
 
-from common import NODE_TYPE, NETWORK_TYPE, VERTEX_TYPE, PEER_TYPE
-from common import ORIGIN_TYPE, EDGE_TYPE, ANNOUNCEMENT_EDGE
+from .common import NODE_TYPE, NETWORK_TYPE, VERTEX_TYPE, PEER_TYPE
+from .common import ORIGIN_TYPE, EDGE_TYPE, ANNOUNCEMENT_EDGE
 
 #from ibgp_tags import *
-from graph_util import *
+from .graph_util import *
 
 
 def IP2Int(ip):
-    o = map(int, ip.split('.'))
+    o = list(map(int, ip.split('.')))
     res = (16777216 * o[0]) + (65536 * o[1]) + (256 * o[2]) + o[3]
     return res
 
 
 """
 BGP config
-self.g.node[node] = {
+self.g.nodes[node] = {
 'bgp': {
         'asnum': 'Router's AS Number',
         'announces': 'List of announcements',
@@ -52,7 +52,7 @@ class ConfigBGPNodes(object):
             peers[remoteas].append(peer)
 
         # Add one router for each AS
-        for remoteas, vals in peers.iteritems():
+        for remoteas, vals in peers.items():
             node = "AS%s" % remoteas
             attrs = {
                 VERTEX_TYPE: PEER_TYPE,
@@ -66,7 +66,7 @@ class ConfigBGPNodes(object):
                 add_bgp_neighbor(self.g, node, c.Router)
                 self.g.add_edge(node, c.Router, addr=a1, net=net, **{EDGE_TYPE: ANNOUNCEMENT_EDGE})
                 self.g.add_edge(c.Router, node, addr=a2, net=net, **{EDGE_TYPE: ANNOUNCEMENT_EDGE})
-                print "Adding input filter", c.Router, node
+                print("Adding input filter", c.Router, node)
                 #add_input_filter(self.g, c.Router, node, access='permit', match=None,
                 #                 action='set local-preference 200')
 
@@ -82,7 +82,7 @@ class ConfigBGPNodes(object):
                 asnum_map[originas] = []
             asnum_map[originas].append(announcement)
         # For each AS add a node to the graph
-        for asnum, anns in asnum_map.iteritems():
+        for asnum, anns in asnum_map.items():
             node = 'AS%s' % asnum
             announces = {}
             for ann in anns:
@@ -202,16 +202,16 @@ class GNS3TopologyGen(object):
         #nx.write_dot(gg, '%s/g.dot' % self.outdir)
 
     def is_peer(self, node):
-        return self.g.node[node][VERTEX_TYPE] == PEER_TYPE
+        return self.g.nodes[node][VERTEX_TYPE] == PEER_TYPE
 
     def is_local_router(self, node):
-        return self.g.node[node][VERTEX_TYPE] == NODE_TYPE
+        return self.g.nodes[node][VERTEX_TYPE] == NODE_TYPE
 
     def is_origin_router(self, node):
-        return self.g.node[node][VERTEX_TYPE] == ORIGIN_TYPE
+        return self.g.nodes[node][VERTEX_TYPE] == ORIGIN_TYPE
 
     def is_network(self, node):
-        return self.g.node[node][VERTEX_TYPE] == NETWORK_TYPE
+        return self.g.nodes[node][VERTEX_TYPE] == NETWORK_TYPE
 
     def is_router(self, node):
         return self.is_peer(node) or self.is_local_router(node) or\
@@ -237,11 +237,11 @@ class GNS3TopologyGen(object):
         For each router annotate it with topological information needed to
         generate the topology file
         """
-        if 'dyn' not in self.g.node[n]:
-            self.g.node[n]['dyn'] = {}
-        dyn = self.g.node[n]['dyn']
+        if 'dyn' not in self.g.nodes[n]:
+            self.g.nodes[n]['dyn'] = {}
+        dyn = self.g.nodes[n]['dyn']
         dyn['model'] = self.router_model
-        dyn['console'] = self.next_console.next()
+        dyn['console'] = next(self.next_console)
         dyn['cnfg'] = "configs/%s.cfg" % n
 
         iface_count = 0
@@ -252,8 +252,8 @@ class GNS3TopologyGen(object):
             iface_count += 1
 
     def annotate_network(self, n):
-        assert len(self.g.neighbors(n)) == 1
-        router = self.g.neighbors(n)[0]
+        assert len(list(self.g.neighbors(n))) == 1
+        router = next(self.g.neighbors(n))
         iface = '{node}-veth1'.format(node=n)
         riface = '{node}-veth0'.format(node=n)
         self.g[n][router]['iface'] = iface
@@ -265,7 +265,7 @@ class GNS3TopologyGen(object):
         Currently we assign /31 IP addresses for each directly connected
         interfaces
         """
-        net = ipaddress.ip_network(u'10.0.0.0/31')
+        net = ipaddress.ip_network('10.0.0.0/31')
 
         for src, dst in self.g.edges():
             # Check if address already assigned
@@ -279,7 +279,7 @@ class GNS3TopologyGen(object):
                 self.g[dst][src]['net'] = net
                 # Increment the network addresses for the next round
                 nextip = ipaddress.ip_address(IP2Int(str(a2)) + 1)
-                net = ipaddress.ip_network(u'%s/31' % nextip)
+                net = ipaddress.ip_network('%s/31' % nextip)
             elif self.is_network(dst):
                 assert dst in self.network_addr_map, "Network %s is not assigned an address" % dst
                 net2 = ipaddress.ip_network(self.network_addr_map[dst])
@@ -299,15 +299,15 @@ class GNS3TopologyGen(object):
 
     def assign_loopback(self):
         """Create loopback interfaces to facilate the iBGP sessions"""
-        net = ipaddress.ip_network(u'1.1.1.1/32')
+        net = ipaddress.ip_network('1.1.1.1/32')
         for node in sorted(list(self.router_iter())):
             a1 = [i for i in net][0]
-            self.g.node[node]['lo'] = 'Loopback 0'
-            self.g.node[node]['loaddr'] = a1
-            self.g.node[node]['lonet'] = net
+            self.g.nodes[node]['lo'] = 'Loopback 0'
+            self.g.nodes[node]['loaddr'] = a1
+            self.g.nodes[node]['lonet'] = net
             # Increment the network addresses for the next round
             nextip = ipaddress.ip_address(IP2Int(str(a1)) + 1)
-            net = ipaddress.ip_network(u'%s/32' % nextip)
+            net = ipaddress.ip_network('%s/32' % nextip)
 
     def _get_ospf_config(self, node):
         config = ""
@@ -335,9 +335,9 @@ class GNS3TopologyGen(object):
             config += " duplex auto\n"
 
         # Loop back interface
-        name = self.g.node[node]['lo']
-        addr = self.g.node[node]['loaddr']
-        net = self.g.node[node]['lonet']
+        name = self.g.nodes[node]['lo']
+        addr = self.g.nodes[node]['loaddr']
+        net = self.g.nodes[node]['lonet']
         config += 'interface %s\n' % name
         config += " ip address %s %s\n" % (addr, net.netmask)
         return config
@@ -357,10 +357,10 @@ class GNS3TopologyGen(object):
 
     def _get_static_config(self, node):
         config = ""
-        if 'static_routes' in self.g.node[node]:
-            for route in self.g.node[node]['static_routes']:
+        if 'static_routes' in self.g.nodes[node]:
+            for route in self.g.nodes[node]['static_routes']:
                 net = route[0]
-                if isinstance(net, basestring):
+                if isinstance(net, str):
                     net = ipaddress.ip_network(self.network_addr_map[route[0]])
                 siface = self.g[node][route[-1]]['iface']
                 config += "ip route {ip} {mask} {iface}\n".format(
@@ -375,7 +375,7 @@ class GNS3TopologyGen(object):
         # For iBGP use loopback iface, otherwise use direct connection
         if nodeas == neighboras:
             #print "Returning loop back address for", node, neighbor
-            return self.g.node[neighbor]['loaddr']
+            return self.g.nodes[neighbor]['loaddr']
         else:
             #print "Returning loop back address for", neighbor, node
             return self.g[neighbor][node]['addr']
@@ -399,7 +399,7 @@ class GNS3TopologyGen(object):
         as_num = get_bgp_asnum(self.g, node)
         iplists = get_ip_prefix_lists(self.g, node)
 
-        for name, iplist in iplists.iteritems():
+        for name, iplist in iplists.items():
             l = [str(self.network_addr_map[ip]) for ip in iplist.Prefixes]
             config += "ip prefix-list %s %s %s\n" % (name, iplist.Action, ' '.join(l))
         config += '!\n'
@@ -407,7 +407,7 @@ class GNS3TopologyGen(object):
         for neighbor in neighbors:
             # Import tags
             import_tags = get_node_import_tags(self.g, node, neighbor)
-            for tag, val in import_tags.iteritems():
+            for tag, val in import_tags.items():
                 if isinstance(val, TagPrefixes):
                     map_match = 'ip address prefix %s ' % val.Prefixes.Name
                     map_action = 'set community %s additive' % tag.to_community()
@@ -436,13 +436,13 @@ class GNS3TopologyGen(object):
         config += "!\n"
 
         # Community lists
-        for name, l in get_community_lists(self.g, node).iteritems():
+        for name, l in get_community_lists(self.g, node).items():
             config += "%s\n" % l.to_list()
 
         config += "!\n"
 
         # Print route maps
-        for neighbor, val in neighbors.iteritems():
+        for neighbor, val in neighbors.items():
             inputmaps = get_input_filters(self.g, node, neighbor)
             outputmaps = get_output_filters(self.g, node, neighbor)
             if inputmaps:
@@ -468,7 +468,7 @@ class GNS3TopologyGen(object):
         # Print Route maps for announced perfixes
         prefix_tags = {}
         nextann = 1
-        for name, vals in get_bgp_announces(self.g, node).iteritems():
+        for name, vals in get_bgp_announces(self.g, node).items():
             if not vals.get('tags', None): continue
             tags = vals['tags']
             lineno = 10
@@ -503,7 +503,7 @@ class GNS3TopologyGen(object):
         if self.is_local_router(node):
             config += ' bgp additional-paths send receive\n'
 
-        for name, vals in get_bgp_announces(self.g, node).iteritems():
+        for name, vals in get_bgp_announces(self.g, node).items():
             net = vals['net']
             if vals.get('rmap', None):
                 rmap = vals['rmap']
@@ -513,11 +513,11 @@ class GNS3TopologyGen(object):
             else:
                 config += " network {} mask {}\n".format(net.network_address, net.netmask)
 
-        for neighbor, val in neighbors.iteritems():
+        for neighbor, val in neighbors.items():
             # Establish neigbors
             neighboraddr = self.get_neighbor_address(node, neighbor)
             remoteas = get_bgp_neighbor_remoteas(self.g, node, neighbor)
-            loaddr = self.g.node[node]['lo']
+            loaddr = self.g.nodes[node]['lo']
             config += " neighbor %s remote-as %s\n" % (neighboraddr, remoteas)
             if int(remoteas) == int(as_num):
                 config += " neighbor %s send-community\n" % neighboraddr
@@ -566,8 +566,8 @@ class GNS3TopologyGen(object):
         return "!\n" + "\n!\n".join(preamble) + config + "\n".join(end)
 
     def gen_networkns(self, n):
-        assert len(self.g.neighbors(n)) == 1
-        router = self.g.neighbors(n)[0]
+        assert len(list(self.g.neighbors(n))) == 1
+        router = next(self.g.neighbors(n))
         addr = self.g[n][router]['addr']
         net = self.g[n][router]['net']
         gateway = self.g[router][n]['addr']
@@ -599,11 +599,11 @@ class GNS3TopologyGen(object):
         topo += "\tudp = 15000"
         topo += "\n"
         topo += "\t[[ %s ]]\n" % self.router_model
-        for k, v in self.router_info.iteritems():
+        for k, v in self.router_info.items():
             topo += "\t\t%s = %s\n" % (k, v)
         for node in sorted(list(self.router_iter())):
             topo += "\t[[ ROUTER %s ]]\n" % node
-            for k, v in self.g.node[node]['dyn'].iteritems():
+            for k, v in self.g.nodes[node]['dyn'].items():
                 topo += "\t\t%s = %s\n" % (k, v)
             for neighbor in self.g.neighbors(node):
                 if self.is_router(neighbor):

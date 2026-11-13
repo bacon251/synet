@@ -5,7 +5,7 @@ import z3
 import re
 import os
 
-from translation.translator import Translator
+from .translation.translator import Translator
 
 
 __author__ = "Ahmed El-Hassany"
@@ -20,6 +20,8 @@ FUNCS_SIG['Vertex'] = ['String']
 FUNCS_SIG['SetNode'] = ['Node']
 FUNCS_SIG['SetInterface'] = ['Node', 'Interface']
 FUNCS_SIG['SetNetwork'] = ['Node', 'Network']
+FUNCS_SIG['ConnectedNetwork'] = ['Node', 'Network']
+FUNCS_SIG['DirectlyConnectedNodes'] = ['Node', 'Node']
 FUNCS_SIG['Node'] = ['Node']
 FUNCS_SIG['Interface'] = ['Interface']
 FUNCS_SIG['Network'] = ['Network']
@@ -131,7 +133,7 @@ def parse_inputs(inputs):
         if not re.match(p, line):
             if line.startswith("//"):
                 continue
-            print "Not valid input, skipping", line
+            print("Not valid input, skipping", line)
             continue
         m = re.match(p, line)
         op = m.group('op')
@@ -142,7 +144,7 @@ def parse_inputs(inputs):
 
 
 def fill_box_info(boxes, box_name, unrolling_limit):
-    print "IN BOX", box_name
+    print("IN BOX", box_name)
     box = Translator(boxes[box_name]['file'], unrolling_limit)
     boxes[box_name]['box'] = box
     boxes[box_name]['constraints'] = box.to_z3()

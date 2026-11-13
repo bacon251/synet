@@ -1,7 +1,8 @@
-from logicblox_grammar import parse_logicblox
+from .logicblox_grammar import parse_logicblox
 import z3
 from string import ascii_uppercase
-from constant import Constant
+from .constant import Constant
+from functools import reduce
 
 BIT_VEC_SIZE = 5 # for encoding string constants
 LB_TYPE_TO_Z3_TYPE = {}
@@ -26,13 +27,13 @@ STRING_TO_BITVAL = {}
 
 
 def get_string_const_val(string):
-  if string in STRING_TO_BITVAL.keys():
+  if string in list(STRING_TO_BITVAL.keys()):
     return STRING_TO_BITVAL[string]
 
-  if 2 ** BIT_VEC_SIZE < len(STRING_TO_BITVAL.keys()):
+  if 2 ** BIT_VEC_SIZE < len(list(STRING_TO_BITVAL.keys())):
     raise NameError(
       'Cannot encode all strings with {} bits'.format(BIT_VEC_SIZE))
-  STRING_TO_BITVAL[string] = z3.BitVecVal(len(STRING_TO_BITVAL.keys()),
+  STRING_TO_BITVAL[string] = z3.BitVecVal(len(list(STRING_TO_BITVAL.keys())),
                                           BIT_VEC_SIZE)
   return STRING_TO_BITVAL[string]
 
@@ -83,7 +84,7 @@ class Translator:
   def to_z3(self):
     z3_constraints = []
     for predicate_name in self.program.get_idb_predicate_names():
-      for step_index in range(self.unroll_limit) + [self.unroll_limit + 1]:       
+      for step_index in list(range(self.unroll_limit)) + [self.unroll_limit + 1]:
         predicate = self.get_predicate(predicate_name, step_index + 1)
         #var_names = [ascii_uppercase[-i-1] for i in range(len(ascii_uppercase))]
         var_names = ['VAR%d' % i for i in range(2000)]
@@ -118,7 +119,7 @@ class Translator:
                 z3_body_free_vars.append(z3_fresh_var)            
                 z3_body_vars.append(z3_fresh_var)
               else:
-                if body_var not in lb_vars_to_z3_vars.keys():
+                if body_var not in list(lb_vars_to_z3_vars.keys()):
                   # Declare a fresh variable if it does not appear in the head     
                   z3_fresh_var = z3.Const(var_names.pop(), literal_predicate.domain(body_var_index))
                   z3_body_free_vars.append(z3_fresh_var)      
@@ -142,15 +143,15 @@ class Translator:
                 z3_right_terms.append(lb_vars_to_z3_vars[right_term])
               elif right_term.is_constant and right_term.type == Constant.INTEGER_CONSTANT:
                 z3_right_terms.append(right_term.value)
-              elif right_term.is_constant and right_term.type == Constant.NODE_CONSTANT and right_term.value in STRING_TO_NODE.keys():
+              elif right_term.is_constant and right_term.type == Constant.NODE_CONSTANT and right_term.value in list(STRING_TO_NODE.keys()):
                 z3_right_terms.append(STRING_TO_NODE[right_term.value])
-              elif right_term.is_constant and right_term.type == Constant.INTERFACE_CONSTANT and right_term.value in STRING_TO_INTERFACE.keys():
+              elif right_term.is_constant and right_term.type == Constant.INTERFACE_CONSTANT and right_term.value in list(STRING_TO_INTERFACE.keys()):
                 z3_right_terms.append(STRING_TO_INTERFACE[right_term.value])
-              elif right_term.is_constant and right_term.type == Constant.NETWORK_CONSTANT and right_term.value in STRING_TO_NETWORK.keys():
+              elif right_term.is_constant and right_term.type == Constant.NETWORK_CONSTANT and right_term.value in list(STRING_TO_NETWORK.keys()):
                 z3_right_terms.append(STRING_TO_NETWORK[right_term.value])
-              elif right_term.is_constant and right_term.type == Constant.STRING_CONSTANT and right_term.value in STRING_TO_BITVAL.keys():
+              elif right_term.is_constant and right_term.type == Constant.STRING_CONSTANT and right_term.value in list(STRING_TO_BITVAL.keys()):
                 z3_right_terms.append(STRING_TO_BITVAL[right_term.value])
-              elif right_term.is_constant and right_term.type == Constant.NODE_CONSTANT and right_term.value not in STRING_TO_NODE.keys() + STRING_TO_NETWORK.keys() + STRING_TO_INTERFACE.keys() + STRING_TO_BITVAL.keys():
+              elif right_term.is_constant and right_term.type == Constant.NODE_CONSTANT and right_term.value not in list(STRING_TO_NODE.keys()) + list(STRING_TO_NETWORK.keys()) + list(STRING_TO_INTERFACE.keys()) + list(STRING_TO_BITVAL.keys()):
                 z3_right_terms.append(get_string_const_val(right_term.value))
               else:
                 raise NameError('Unknown term: {}'.format(right_term))             

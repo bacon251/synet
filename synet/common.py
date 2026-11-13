@@ -77,7 +77,7 @@ def draw(g, out):
         return new_attrs
     clean_g = g.copy()
     for n, attrs in clean_g.nodes(True):
-        clean_g.node[n] = _allowed_attrs(attrs)
+        clean_g.nodes[n] = _allowed_attrs(attrs)
     for src, dst, attrs in clean_g.edges(data=True):
-        clean_g.edge[src][dst] = _allowed_attrs(attrs)
+        clean_g.adj[src][dst] = _allowed_attrs(attrs)
     nx_pydot.write_dot(clean_g, out)

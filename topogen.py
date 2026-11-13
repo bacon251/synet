@@ -30,7 +30,7 @@ def main():
             if not nx.is_strongly_connected(graph):
                 # Skip not connected graphs
                 continue
-            print toponame, num_nodes, num_edges
+            print(toponame, num_nodes, num_edges)
 
             for traffic_classes in [1, 5, 10, 15, 20]:
                 if traffic_classes >= len(graph.nodes()):

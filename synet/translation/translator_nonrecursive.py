@@ -1,8 +1,9 @@
-from logicblox_grammar import parse_logicblox
+from .logicblox_grammar import parse_logicblox
 import z3
 from string import ascii_uppercase
-from constant import Constant
+from .constant import Constant
 from lib2to3.pgen2 import literals
+from functools import reduce
 
 DISTINCT_CONSTRAINT = True
 BIT_VEC_SIZE = 1 # for encoding string constants
@@ -15,13 +16,13 @@ LB_TYPE_TO_Z3_TYPE['int'] = z3.IntSort()
 STRING_TO_BITVAL = {}
 
 def get_string_const_val(string):
-  if string in STRING_TO_BITVAL.keys():
+  if string in list(STRING_TO_BITVAL.keys()):
     return STRING_TO_BITVAL[string]
 
-  if 2 ** BIT_VEC_SIZE < len(STRING_TO_BITVAL.keys()):
+  if 2 ** BIT_VEC_SIZE < len(list(STRING_TO_BITVAL.keys())):
     raise NameError(
       'Cannot encode all strings with {} bits'.format(BIT_VEC_SIZE))
-  STRING_TO_BITVAL[string] = z3.BitVecVal(len(STRING_TO_BITVAL.keys()),
+  STRING_TO_BITVAL[string] = z3.BitVecVal(len(list(STRING_TO_BITVAL.keys())),
                                           BIT_VEC_SIZE)
   return STRING_TO_BITVAL[string]
 
@@ -125,7 +126,7 @@ class Translator:
               z3_fresh_var = self.get_fresh_var(literal_predicate.domain(literal_var_index))
               z3_body_free_vars.append(z3_fresh_var)            
               z3_literal_vars.append(z3_fresh_var)
-          elif literal_var in substitution.keys():
+          elif literal_var in list(substitution.keys()):
             z3_literal_vars.append(substitution[literal_var])
           else:
             z3_fresh_var = self.get_fresh_var(literal_predicate.domain(literal_var_index))
@@ -192,4 +193,4 @@ if __name__ == '__main__':
   unroll_limit = 3
   box = Translator('../../logicblox/stratum-02-ospf-01.logic', unroll_limit)
   #box = Translator('../../logicblox/recursive_test.logic', unroll_limit)
-  print box.to_z3()
+  print(box.to_z3())

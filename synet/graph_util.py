@@ -9,8 +9,8 @@ import random
 
 from collections import namedtuple
 
-from common import VERTEX_TYPE, PEER_TYPE, EDGE_TYPE, ANNOUNCEMENT_EDGE
-from common import NODE_TYPE, INTERNAL_EDGE
+from .common import VERTEX_TYPE, PEER_TYPE, EDGE_TYPE, ANNOUNCEMENT_EDGE
+from .common import NODE_TYPE, INTERNAL_EDGE
 
 
 
@@ -177,9 +177,9 @@ AnyTag = Tag('*')
 
 def get_bgp_attrs(g, node):
     """Return a dict of all BGP related attrs given to a node"""
-    if 'bgp' not in g.node[node]:
-       g.node[node]['bgp'] = {'asnum': None, 'neighbors': {}, 'announces': {}}
-    return g.node[node]['bgp']
+    if 'bgp' not in g.nodes[node]:
+       g.nodes[node]['bgp'] = {'asnum': None, 'neighbors': {}, 'announces': {}}
+    return g.nodes[node]['bgp']
 
 
 def get_bgp_neighbors(g, node):
@@ -226,7 +226,7 @@ def add_bgp_announces(g, node, name, net=None, tags=[]):
         announces[name]['net'] = net
 
 def add_bgp_announces_tag(g, node, name, tag):
-    print "ADDED tag", name, tag
+    print("ADDED tag", name, tag)
     add_bgp_announces(g, node, name)
     announces = get_bgp_announces(g, node)
     announces[name]['tags'].append(tag)
@@ -250,7 +250,7 @@ def add_bgp_external_peer(g, node, remoteas, nexthop):
 def get_neighbor_by_nexthop(g, node, nexthop):
     """Get the router who is a neighbor with a given nexthop"""
     neighbors = get_bgp_neighbors(g, node)
-    for n, attrs in neighbors.iteritems():
+    for n, attrs in neighbors.items():
         if g[node][n].get('nexthop', None) == nexthop:
             return n
 
@@ -292,7 +292,7 @@ def add_ip_prefix_list(g, node, iplist):
     attrs[name] = iplist
 
 def get_ip_prefix_lists(g, node):
-    attrs = g.node[node]
+    attrs = g.nodes[node]
     if 'ip_prefix_list' not in attrs:
         attrs['ip_prefix_list'] = {}
     return attrs['ip_prefix_list']
@@ -379,7 +379,7 @@ def read_topology_zoo(filename):
     g = nx.DiGraph()
     lbl_map = {}
     for node in graphml.nodes():
-        label = str(graphml.node[node]['label'])
+        label = str(graphml.nodes[node]['label'])
         # remove whitespaces
         label = label.replace(' ', 'TT')
         if label == 'None':
