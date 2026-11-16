@@ -1,0 +1,2 @@
++Fwd("EXT", "A", "B", "bgp").
+-Fwd("EXT", "A", "C", "bgp").

@@ -1,0 +1,34 @@
+// Three routers with two BGP exits. A prefers B because of LOCAL_PREF.
++SetNode("A").
++SetNode("B").
++SetNode("C").
+
++SetInterface("A", "A_I_B").
++SetInterface("A", "A_I_C").
++SetInterface("B", "B_I_A").
++SetInterface("B", "B_I_C").
++SetInterface("C", "C_I_A").
++SetInterface("C", "C_I_B").
+
++SetLink("A_I_B", "B_I_A").
++SetLink("A_I_C", "C_I_A").
++SetLink("B_I_C", "C_I_B").
+
++SetAdminDist("A", "static", 1).
++SetAdminDist("A", "bgp", 2).
++SetAdminDist("A", "ospf", 3).
++SetAdminDist("B", "static", 1).
++SetAdminDist("B", "bgp", 2).
++SetAdminDist("B", "ospf", 3).
++SetAdminDist("C", "static", 1).
++SetAdminDist("C", "bgp", 2).
++SetAdminDist("C", "ospf", 3).
+
++SetNetwork("B", "B_BGP").
++SetNetwork("C", "C_BGP").
++SetBGPAnnouncement("B", "B_BGP", "EXT", "1;2;3", 3).
++SetBGPAnnouncement("C", "C_BGP", "EXT", "1;2;3", 3).
+
+// The current synthesizer requires the selected route's LOCAL_PREF to be 6.
++SetBGPLocalPref("A", "B_BGP", "EXT", 6).
++SetBGPLocalPref("A", "C_BGP", "EXT", 5).
